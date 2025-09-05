@@ -75,16 +75,7 @@ export default function ShowSchools() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {schools.map((school) => (
-              <div key={school.id} className="school-card">
-                <div className="relative h-48 w-full">
-                  <Image
-                    src={school.image ? `/schoolImages/${school.image}` : '/placeholder-school.jpg'}
-                    alt={school.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                  />
-                </div>
+              <div key={school.id} className="school-card border rounded-lg shadow p-4 bg-white">
                 <div className="p-4">
                   <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
                     {school.name}
@@ -93,7 +84,13 @@ export default function ShowSchools() {
                     {school.address}
                   </p>
                   <p className="text-gray-700 font-medium">
-                    {school.city}
+                    {school.city}, {school.state}
+                  </p>
+                  <p className="text-gray-700 font-medium mt-1">
+                    Contact: {school.contact}
+                  </p>
+                  <p className="text-gray-700 font-medium mt-1">
+                    Email: {school.email}
                   </p>
                 </div>
               </div>
