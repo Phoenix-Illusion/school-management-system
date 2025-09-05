@@ -17,53 +17,56 @@ cloudinary.v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Helper to promisify formidable
+const parseForm = (req) =>
+  new Promise((resolve, reject) => {
+    const form = formidable({ multiples: false });
+    form.parse(req, (err, fields, files) => {
+      if (err) reject(err);
+      else resolve({ fields, files });
+    });
+  });
+
 export default async function handler(req, res) {
   await dbConnect();
 
   if (req.method === 'POST') {
-    const form = formidable({ multiples: false });
+    try {
+      const { fields, files } = await parseForm(req);
 
-    form.parse(req, async (err, fields, files) => {
-      if (err) {
-        return res.status(500).json({ error: 'Error parsing form data' });
-      }
-
-      try {
-        let imageUrl = '';
-
-        // Upload image to Cloudinary
-        if (files.image) {
-          const uploadResult = await cloudinary.v2.uploader.upload(files.image.filepath, {
-            folder: 'schools',
-          });
-          imageUrl = uploadResult.secure_url;
-        }
-
-        // Create new school
-        const newSchool = await School.create({
-          name: fields.name,
-          address: fields.address,
-          city: fields.city,
-          state: fields.state,
-          contact: fields.contact,
-          email: fields.email,
-          image: imageUrl, // save Cloudinary URL
+      let imageUrl = '';
+      if (files.image) {
+        const uploadResult = await cloudinary.v2.uploader.upload(files.image.filepath, {
+          folder: 'schools',
         });
-
-        return res.status(201).json(newSchool);
-      } catch (error) {
-        return res.status(500).json({ error: error.message });
+        imageUrl = uploadResult.secure_url;
       }
-    });
+
+      const newSchool = await School.create({
+        name: fields.name,
+        address: fields.address,
+        city: fields.city,
+        state: fields.state,
+        contact: fields.contact,
+        email: fields.email,
+        image: imageUrl,
+      });
+
+      return res.status(201).json(newSchool);
+    } catch (error) {
+      console.error('Error adding school:', error);
+      return res.status(500).json({ error: error.message });
+    }
   } else if (req.method === 'GET') {
     try {
       const schools = await School.find({});
       return res.status(200).json(schools);
     } catch (error) {
+      console.error('Error fetching schools:', error);
       return res.status(500).json({ error: error.message });
     }
   } else {
     res.setHeader('Allow', ['POST', 'GET']);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 }
