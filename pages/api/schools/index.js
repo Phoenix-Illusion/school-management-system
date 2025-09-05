@@ -1,32 +1,9 @@
 import pool from '@/lib/db';
-import { upload } from '@/lib/multerConfig';
-
-// Disable default body parser for file uploads
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-const runMiddleware = (req, res, fn) => {
-  return new Promise((resolve, reject) => {
-    fn(req, res, (result) => {
-      if (result instanceof Error) {
-        return reject(result);
-      }
-      return resolve(result);
-    });
-  });
-};
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      // Handle file upload
-      await runMiddleware(req, res, upload.single('image'));
-      
-      const { name, address, city, state, contact, email } = req.body;
-      const imageName = req.file ? req.file.filename : null;
+      const { name, address, city, state, contact, email, image } = req.body;
 
       // Validation
       if (!name || !address || !city || !state || !contact || !email) {
@@ -48,30 +25,32 @@ export default async function handler(req, res) {
       // Insert into database
       const [result] = await pool.execute(
         'INSERT INTO schools (name, address, city, state, contact, image, email) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [name, address, city, state, contact, imageName, email]
+        [name, address, city, state, contact, image || null, email]
       );
 
-      res.status(201).json({ 
+      return res.status(201).json({
         message: 'School added successfully',
-        schoolId: result.insertId 
+        schoolId: result.insertId,
       });
     } catch (error) {
       console.error('Error adding school:', error);
-      res.status(500).json({ error: 'Failed to add school' });
+      return res.status(500).json({ error: 'Failed to add school' });
     }
-  } else if (req.method === 'GET') {
+  }
+
+  if (req.method === 'GET') {
     try {
       const [rows] = await pool.execute(
         'SELECT id, name, address, city, state, contact, image, email FROM schools ORDER BY id DESC'
       );
-      
-      res.status(200).json({ schools: rows });
+
+      return res.status(200).json({ schools: rows });
     } catch (error) {
       console.error('Error fetching schools:', error);
-      res.status(500).json({ error: 'Failed to fetch schools' });
+      return res.status(500).json({ error: 'Failed to fetch schools' });
     }
-  } else {
-    res.setHeader('Allow', ['GET', 'POST']);
-    res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
+
+  res.setHeader('Allow', ['GET', 'POST']);
+  return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }
