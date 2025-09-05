@@ -1,40 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# 🏫 School Management App
 
-## Getting Started
+A simple **School Management web application** built with **Next.js, MongoDB (Mongoose), TailwindCSS**, and **Vercel Deployment**.  
+It allows users to **add schools** (with details like name, address, city, state, contact, email, and image) and **view all schools** in a clean UI.
 
-First, run the development server:
+---
 
+## 🚀 Features
+
+- Add a new school with details (Name, Address, City, State, Contact, Email, Image).
+- Data stored securely in **MongoDB Atlas**.
+- File uploads handled via **Cloudinary**.
+- Responsive, modern UI with **TailwindCSS**.
+- Deployed on **Vercel** for easy public access.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend:** Next.js, React, TailwindCSS  
+- **Backend API:** Next.js API routes  
+- **Database:** MongoDB Atlas with Mongoose ORM  
+- **Image Uploads:** Cloudinary  
+- **Deployment:** Vercel  
+
+---
+
+## ⚙️ Installation & Setup
+
+Follow these steps if you want to run the project locally:
+
+### 1️⃣ Clone the Repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
-
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
-
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+git clone https://github.com/your-username/school-management.git
+cd school-management
