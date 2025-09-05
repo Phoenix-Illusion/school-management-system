@@ -1,9 +1,17 @@
 import pool from '@/lib/db';
 
+// Disable default body parser for form submissions
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      const { name, address, city, state, contact, email, image } = req.body;
+      const { name, address, city, state, contact, email } = req.body;
+      const imageName = "https://via.placeholder.com/150"; // dummy image
 
       // Validation
       if (!name || !address || !city || !state || !contact || !email) {
@@ -25,32 +33,30 @@ export default async function handler(req, res) {
       // Insert into database
       const [result] = await pool.execute(
         'INSERT INTO schools (name, address, city, state, contact, image, email) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [name, address, city, state, contact, image || null, email]
+        [name, address, city, state, contact, imageName, email]
       );
 
-      return res.status(201).json({
+      res.status(201).json({ 
         message: 'School added successfully',
-        schoolId: result.insertId,
+        schoolId: result.insertId 
       });
     } catch (error) {
       console.error('Error adding school:', error);
-      return res.status(500).json({ error: 'Failed to add school' });
+      res.status(500).json({ error: 'Failed to add school' });
     }
-  }
-
-  if (req.method === 'GET') {
+  } else if (req.method === 'GET') {
     try {
       const [rows] = await pool.execute(
         'SELECT id, name, address, city, state, contact, image, email FROM schools ORDER BY id DESC'
       );
-
-      return res.status(200).json({ schools: rows });
+      
+      res.status(200).json({ schools: rows });
     } catch (error) {
       console.error('Error fetching schools:', error);
-      return res.status(500).json({ error: 'Failed to fetch schools' });
+      res.status(500).json({ error: 'Failed to fetch schools' });
     }
+  } else {
+    res.setHeader('Allow', ['GET', 'POST']);
+    res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
-
-  res.setHeader('Allow', ['GET', 'POST']);
-  return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }
