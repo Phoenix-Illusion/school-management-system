@@ -10,48 +10,49 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  await dbConnect();
+
   if (req.method === 'POST') {
     try {
-      const { name, address, city, state, contact, email, imageBase64 } = req.body;
+      const { fields, files } = await parseForm(req);
 
-      if (!name || !address || !city || !state || !contact || !email) {
-        return res.status(400).json({ error: 'All fields are required' });
-      }
-
-      // Upload image to Cloudinary (if given)
-      let imageUrl = null;
-      if (imageBase64) {
-        const uploadRes = await cloudinary.uploader.upload(imageBase64, {
-          folder: "schools",
+      let imageUrl = '';
+      if (files?.image) {
+        const uploadResult = await cloudinary.v2.uploader.upload(files.image.filepath, {
+          folder: 'schools',
         });
-        imageUrl = uploadRes.secure_url;
+        imageUrl = uploadResult.secure_url;
       }
 
-      const [result] = await pool.execute(
-        'INSERT INTO schools (name, address, city, state, contact, image, email) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [name, address, city, state, contact, imageUrl, email]
-      );
-
-      res.status(201).json({
-        message: 'School added successfully',
-        schoolId: result.insertId,
+      const newSchool = await School.create({
+        name: fields.name || '',
+        address: fields.address || '',
+        city: fields.city || '',
+        state: fields.state || '',
+        contact: fields.contact || '',
+        email: fields.email || '',
+        image: imageUrl,
       });
+
+      return res.status(201).json(newSchool);
     } catch (error) {
-      console.error('Error adding school:', error);
-      res.status(500).json({ error: 'Failed to add school' });
+      console.error('POST error:', error);
+      return res.status(500).json({ error: error.message || 'Something went wrong' });
     }
-  } else if (req.method === 'GET') {
+  } 
+  
+  else if (req.method === 'GET') {
     try {
-      const [rows] = await pool.execute(
-        'SELECT id, name, address, city, state, contact, image, email FROM schools ORDER BY id DESC'
-      );
-      res.status(200).json({ schools: rows });
+      const schools = await School.find({});
+      return res.status(200).json(schools);
     } catch (error) {
-      console.error('Error fetching schools:', error);
-      res.status(500).json({ error: 'Failed to fetch schools' });
+      console.error('GET error:', error);
+      return res.status(500).json({ error: error.message || 'Failed to fetch schools' });
     }
-  } else {
-    res.setHeader('Allow', ['GET', 'POST']);
-    res.status(405).json({ error: `Method ${req.method} not allowed` });
+  } 
+  
+  else {
+    res.setHeader('Allow', ['POST', 'GET']);
+    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 }
