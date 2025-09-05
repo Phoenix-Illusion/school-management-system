@@ -1,44 +1,40 @@
 import pool from '@/lib/db';
+import cloudinary from '@/lib/cloudinary';
 
-// Disable default body parser for form submissions
 export const config = {
   api: {
-    bodyParser: true,
+    bodyParser: {
+      sizeLimit: '10mb', // large file uploads
+    },
   },
 };
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      const { name, address, city, state, contact, email } = req.body;
-      const imageName = "https://via.placeholder.com/150"; // dummy image
+      const { name, address, city, state, contact, email, imageBase64 } = req.body;
 
-      // Validation
       if (!name || !address || !city || !state || !contact || !email) {
         return res.status(400).json({ error: 'All fields are required' });
       }
 
-      // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return res.status(400).json({ error: 'Invalid email format' });
+      // Upload image to Cloudinary (if given)
+      let imageUrl = null;
+      if (imageBase64) {
+        const uploadRes = await cloudinary.uploader.upload(imageBase64, {
+          folder: "schools",
+        });
+        imageUrl = uploadRes.secure_url;
       }
 
-      // Phone validation
-      const phoneRegex = /^[0-9]{10}$/;
-      if (!phoneRegex.test(contact)) {
-        return res.status(400).json({ error: 'Contact number must be 10 digits' });
-      }
-
-      // Insert into database
       const [result] = await pool.execute(
         'INSERT INTO schools (name, address, city, state, contact, image, email) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [name, address, city, state, contact, imageName, email]
+        [name, address, city, state, contact, imageUrl, email]
       );
 
-      res.status(201).json({ 
+      res.status(201).json({
         message: 'School added successfully',
-        schoolId: result.insertId 
+        schoolId: result.insertId,
       });
     } catch (error) {
       console.error('Error adding school:', error);
@@ -49,7 +45,6 @@ export default async function handler(req, res) {
       const [rows] = await pool.execute(
         'SELECT id, name, address, city, state, contact, image, email FROM schools ORDER BY id DESC'
       );
-      
       res.status(200).json({ schools: rows });
     } catch (error) {
       console.error('Error fetching schools:', error);
